@@ -186,11 +186,13 @@ class ADS1115:
         # start with default values
         config = (
             self.REG_CONFIG_CQUE_NONE |
-            self.REG_CONFIG_CLAT_NONLAT |  # Disable the comparator (default val)
-            self.REG_CONFIG_CPOL_ACTVLOW |  # Non-latching (default val)
-            self.REG_CONFIG_CMODE_TRAD |  # Alert/Rdy active low   (default val)
-            self.sdr_selection[self.rate] |  # Traditional comparator (default val)
-            self.REG_CONFIG_MODE_SINGLE  # 1600 samples per second (default)
+            self.REG_CONFIG_CLAT_NONLAT |
+            self.REG_CONFIG_CPOL_ACTVLOW |
+            self.REG_CONFIG_CMODE_TRAD |  # Disable the comparator (default val)
+            self.sdr_selection[self.rate] |  # Non-latching (default val)
+            # Alert/Rdy active low   (default val)
+            # Traditional comparator (default val)  # 1600 samples per second (default)
+            self.REG_CONFIG_MODE_SINGLE
         )  # Single-shot mode (default)
 
         # Set PGA/voltage range
@@ -216,11 +218,13 @@ class ADS1115:
         # start with default values
         config = (
             self.REG_CONFIG_CQUE_NONE |
-            self.REG_CONFIG_CLAT_NONLAT |  # Disable the comparator (default val)
-            self.REG_CONFIG_CPOL_ACTVLOW |  # Non-latching (default val)
-            self.REG_CONFIG_CMODE_TRAD |  # Alert/Rdy active low   (default val)
-            self.sdr_selection[self.rate] |  # Traditional comparator (default val)
-            self.REG_CONFIG_MODE_SINGLE  # samples per second
+            self.REG_CONFIG_CLAT_NONLAT |
+            self.REG_CONFIG_CPOL_ACTVLOW |
+            self.REG_CONFIG_CMODE_TRAD |  # Disable the comparator (default val)
+            self.sdr_selection[self.rate] |  # Non-latching (default val)
+            # Alert/Rdy active low   (default val)
+            # Traditional comparator (default val)  # samples per second
+            self.REG_CONFIG_MODE_SINGLE
         )  # Single-shot mode (default)
 
         # Set PGA/voltage range
