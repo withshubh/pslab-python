@@ -1,4 +1,3 @@
-import inspect
 
 from PSL.SENSORS import HMC5883L
 from PSL.SENSORS import MPU6050
@@ -7,7 +6,6 @@ from PSL.SENSORS import BMP180
 from PSL.SENSORS import TSL2561
 from PSL.SENSORS import SHT21
 from PSL.SENSORS import BH1750
-from PSL.SENSORS import SSD1306
 
 supported = {
     0x68: MPU6050,  # 3-axis gyro,3-axis accel,temperature
