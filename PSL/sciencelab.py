@@ -404,7 +404,7 @@ class ScienceLab():
 		================    ============================================================================================
 
 		"""
-        if (type(data) == str): data = [ord(a) for a in data]
+        if (type(data) is str): data = [ord(a) for a in data]
         if len(data) % 2 == 1: data.append(0)
 
         self.H.__sendByte__(CP.FLASH)
