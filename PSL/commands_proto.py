@@ -253,7 +253,7 @@ TEN_BIT = Byte.pack(10)
 TWELVE_BIT = Byte.pack(12)
 
 
-'''
+"""
 def reverse_bits(x):
 	return int('{:08b}'.format(x)[::-1], 2)
 
@@ -285,4 +285,4 @@ def getLx(f1,f2,f3,Ccal):
 	c=(2*math.pi*f1)**2
 	return (a-1)*(b-1)/(Ccal*c)
 
-'''
+"""

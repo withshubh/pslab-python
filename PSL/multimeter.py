@@ -220,8 +220,8 @@ class Multimeter(Oscilloscope):
 
         if voltage:
             capacitance = (
-                charge_current * charge_time * MICROSECONDS / voltage
-                - self._stray_capacitance
+                charge_current * charge_time * MICROSECONDS / voltage -
+                self._stray_capacitance
             )
         else:
             capacitance = 0

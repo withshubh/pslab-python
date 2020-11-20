@@ -1,6 +1,6 @@
-'''
+"""
 Adapted from https://github.com/janheise/TSL2561
-'''
+"""
 
 from __future__ import print_function
 import time
@@ -35,13 +35,13 @@ class TSL2561:
     ADDRESS = 0x39  # addr normal
     timing = INTEGRATIONTIME_13MS
     gain = GAIN_16X
-    name = 'TSL2561 Luminosity'
+    name = "TSL2561 Luminosity"
     ADDRESS = 0x39
     NUMPLOTS = 3
-    PLOTNAMES = ['Full', 'IR', 'Visible']
+    PLOTNAMES = ["Full", "IR", "Visible"]
 
     def __init__(self, I2C, **args):
-        self.ADDRESS = args.get('address', 0x39)
+        self.ADDRESS = args.get("address", 0x39)
         self.I2C = I2C
         # set timing 101ms & 16x gain
         self.enable()
@@ -59,7 +59,7 @@ class TSL2561:
 
         # self.I2C.writeBulk(self.ADDRESS,[0x80,0x00])
 
-        self.params = {'setGain': ['1x', '16x'], 'setTiming': [0, 1, 2]}
+        self.params = {"setGain": ["1x", "16x"], "setTiming": [0, 1, 2]}
 
     def getID(self):
         ID = self.I2C.readBulk(self.ADDRESS, self.REGISTER_ID, 1)
@@ -77,25 +77,37 @@ class TSL2561:
             return False
 
     def setGain(self, gain):
-        if (gain == '1x'):
+        if gain == "1x":
             self.gain = self.GAIN_1X
-        elif (gain == '16x'):
+        elif gain == "16x":
             self.gain = self.GAIN_16X
         else:
             self.gain = self.GAIN_0X
 
-        self.I2C.writeBulk(self.ADDRESS, [self.COMMAND_BIT | self.REGISTER_TIMING, self.gain | self.timing])
+        self.I2C.writeBulk(
+            self.ADDRESS,
+            [self.COMMAND_BIT | self.REGISTER_TIMING, self.gain | self.timing],
+        )
 
     def setTiming(self, timing):
-        print([13, 101, 402][timing], 'mS')
+        print([13, 101, 402][timing], "mS")
         self.timing = timing
-        self.I2C.writeBulk(self.ADDRESS, [self.COMMAND_BIT | self.REGISTER_TIMING, self.gain | self.timing])
+        self.I2C.writeBulk(
+            self.ADDRESS,
+            [self.COMMAND_BIT | self.REGISTER_TIMING, self.gain | self.timing],
+        )
 
     def enable(self):
-        self.I2C.writeBulk(self.ADDRESS, [self.COMMAND_BIT | self.REGISTER_CONTROL, self.CONTROL_POWERON])
+        self.I2C.writeBulk(
+            self.ADDRESS,
+            [self.COMMAND_BIT | self.REGISTER_CONTROL, self.CONTROL_POWERON],
+        )
 
     def disable(self):
-        self.I2C.writeBulk(self.ADDRESS, [self.COMMAND_BIT | self.REGISTER_CONTROL, self.CONTROL_POWEROFF])
+        self.I2C.writeBulk(
+            self.ADDRESS,
+            [self.COMMAND_BIT | self.REGISTER_CONTROL, self.CONTROL_POWEROFF],
+        )
 
     def wait(self):
         if self.timing == self.INTEGRATIONTIME_13MS:

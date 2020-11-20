@@ -5,34 +5,41 @@ def connect(route, **args):
     return MLX90614(route, **args)
 
 
-class MLX90614():
+class MLX90614:
     NUMPLOTS = 1
-    PLOTNAMES = ['Temp']
+    PLOTNAMES = ["Temp"]
     ADDRESS = 0x5A
-    name = 'PIR temperature'
+    name = "PIR temperature"
 
     def __init__(self, I2C, **args):
         self.I2C = I2C
-        self.ADDRESS = args.get('address', self.ADDRESS)
+        self.ADDRESS = args.get("address", self.ADDRESS)
         self.OBJADDR = 0x07
         self.AMBADDR = 0x06
 
         self.source = self.OBJADDR
 
-        self.name = 'Passive IR temperature sensor'
-        self.params = {'readReg': {'dataType': 'integer', 'min': 0, 'max': 0x20, 'prefix': 'Addr: '},
-                       'select_source': ['object temperature', 'ambient temperature']}
+        self.name = "Passive IR temperature sensor"
+        self.params = {
+            "readReg": {
+                "dataType": "integer",
+                "min": 0,
+                "max": 0x20,
+                "prefix": "Addr: ",
+            },
+            "select_source": ["object temperature", "ambient temperature"],
+        }
 
         try:
-            print('switching baud to 100k')
+            print("switching baud to 100k")
             self.I2C.configI2C(100e3)
         except Exception as e:
-            print('FAILED TO CHANGE BAUD RATE', e.message)
+            print("FAILED TO CHANGE BAUD RATE", e.message)
 
     def select_source(self, source):
-        if source == 'object temperature':
+        if source == "object temperature":
             self.source = self.OBJADDR
-        elif source == 'ambient temperature':
+        elif source == "ambient temperature":
             self.source = self.AMBADDR
 
     def readReg(self, addr):
@@ -47,7 +54,7 @@ class MLX90614():
         vals = self.getVals(self.source, 3)
         if vals:
             if len(vals) == 3:
-                return [((((vals[1] & 0x007f) << 8) + vals[0]) * 0.02) - 0.01 - 273.15]
+                return [((((vals[1] & 0x007F) << 8) + vals[0]) * 0.02) - 0.01 - 273.15]
             else:
                 return False
         else:

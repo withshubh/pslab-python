@@ -20,11 +20,11 @@ class BMP180:
     CMD_P3 = 0xF4
     oversampling = 0
     NUMPLOTS = 3
-    PLOTNAMES = ['Temperature', 'Pressure', 'Altitude']
-    name = 'Altimeter BMP180'
+    PLOTNAMES = ["Temperature", "Pressure", "Altitude"]
+    name = "Altimeter BMP180"
 
     def __init__(self, I2C, **args):
-        self.ADDRESS = args.get('address', self.ADDRESS)
+        self.ADDRESS = args.get("address", self.ADDRESS)
 
         self.I2C = I2C
 
@@ -47,10 +47,26 @@ class BMP180:
         self.p1 = 1.0 - 7357.0 * pow(2, -20)
         self.p2 = 3038.0 * 100.0 * pow(2, -36)
         self.T = 25
-        print('calib:', self.c3, self.c4, self.b1, self.c5, self.c6, self.mc, self.md, self.x0, self.x1, self.x2,
-              self.y0, self.y1, self.p0, self.p1, self.p2)
-        self.params = {'setOversampling': [0, 1, 2, 3]}
-        self.name = 'BMP180 Altimeter'
+        print(
+            "calib:",
+            self.c3,
+            self.c4,
+            self.b1,
+            self.c5,
+            self.c6,
+            self.mc,
+            self.md,
+            self.x0,
+            self.x1,
+            self.x2,
+            self.y0,
+            self.y1,
+            self.p0,
+            self.p1,
+            self.p2,
+        )
+        self.params = {"setOversampling": [0, 1, 2, 3]}
+        self.name = "BMP180 Altimeter"
         self.initTemperature()
         self.readTemperature()
         self.initPressure()
@@ -61,7 +77,7 @@ class BMP180:
 
     def __readUInt__(self, addr):
         vals = self.I2C.readBulk(self.ADDRESS, addr, 2)
-        v = 1. * ((vals[0] << 8) | vals[1])
+        v = 1.0 * ((vals[0] << 8) | vals[1])
         return v
 
     def initTemperature(self):
@@ -82,7 +98,7 @@ class BMP180:
         self.oversampling = num
 
     def initPressure(self):
-        os = [0x34, 0x74, 0xb4, 0xf4]
+        os = [0x34, 0x74, 0xB4, 0xF4]
         delays = [0.005, 0.008, 0.014, 0.026]
         self.I2C.writeBulk(self.ADDRESS, [self.REG_CONTROL, os[self.oversampling]])
         time.sleep(delays[self.oversampling])
@@ -90,7 +106,7 @@ class BMP180:
     def readPressure(self):
         vals = self.I2C.readBulk(self.ADDRESS, self.REG_RESULT, 3)
         if len(vals) == 3:
-            P = 1. * (vals[0] << 8) + vals[1] + (vals[2] / 256.0)
+            P = 1.0 * (vals[0] << 8) + vals[1] + (vals[2] / 256.0)
             s = self.T - 25.0
             x = (self.x2 * pow(s, 2)) + (self.x1 * s) + self.x0
             y = (self.y2 * pow(s, 2)) + (self.y1 * s) + self.y0
@@ -102,13 +118,13 @@ class BMP180:
 
     def altitude(self):
         # baseline pressure needs to be provided
-        return (44330.0 * (1 - pow(self.P / self.baseline, 1 / 5.255)))
+        return 44330.0 * (1 - pow(self.P / self.baseline, 1 / 5.255))
 
     def sealevel(self, P, A):
-        '''
+        """
         given a calculated pressure and altitude, return the sealevel
-        '''
-        return (P / pow(1 - (A / 44330.0), 5.255))
+        """
+        return P / pow(1 - (A / 44330.0), 5.255)
 
     def getRaw(self):
         self.initTemperature()

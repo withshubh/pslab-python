@@ -5,16 +5,18 @@ import numpy as np
 import time
 
 
-class I2CMaster():
+class I2CMaster:
     """
     Methods to handle slave independent functionality with the I2C port.
     An instance of Labtools.Packet_Handler must be passed to the init function
     """
+
     MAX_BRGVAL = 511
 
     def __init__(self, H):
         self.H = H
         from PSL import sensorlist
+
         self.SENSORS = sensorlist.sensors
 
     def init(self):
@@ -61,10 +63,14 @@ class I2CMaster():
         self.H.__sendByte__(CP.I2C_HEADER)
         self.H.__sendByte__(CP.I2C_CONFIG)
         # freq=1/((BRGVAL+1.0)/64e6+1.0/1e7)
-        BRGVAL = int((1. / freq - 1. / 1e7) * 64e6 - 1)
+        BRGVAL = int((1.0 / freq - 1.0 / 1e7) * 64e6 - 1)
         if BRGVAL > self.MAX_BRGVAL:
             BRGVAL = self.MAX_BRGVAL
-            if verbose: print('Frequency too low. Setting to :', 1 / ((BRGVAL + 1.0) / 64e6 + 1.0 / 1e7))
+            if verbose:
+                print(
+                    "Frequency too low. Setting to :",
+                    1 / ((BRGVAL + 1.0) / 64e6 + 1.0 / 1e7),
+                )
         self.H.__sendInt__(BRGVAL)
         self.H.__get_ack__()
 
@@ -88,24 +94,26 @@ class I2CMaster():
         addrs = []
         n = 0
         if verbose:
-            print('Scanning addresses 0-127...')
-            print('Address', '\t', 'Possible Devices')
+            print("Scanning addresses 0-127...")
+            print("Address", "\t", "Possible Devices")
         for a in range(0, 128):
             slave = I2CSlave(self.H, a)
             x = slave.start(0)
             if x & 1 == 0:  # ACK received
                 addrs.append(a)
-                if verbose: print(hex(a), '\t\t', self.SENSORS.get(a, 'None'))
+                if verbose:
+                    print(hex(a), "\t\t", self.SENSORS.get(a, "None"))
                 n += 1
             slave.stop()
         return addrs
 
 
-class I2CSlave():
+class I2CSlave:
     """
     Methods to handle slave with the I2C port.
     An instance of Labtools.Packet_Handler and slave address must be passed to the init function
     """
+
     samples = 0
     total_bytes = 0
     channels = 0
@@ -308,7 +316,7 @@ class I2CSlave():
         try:
             return list(data)
         except:
-            print('Transaction failed')
+            print("Transaction failed")
             return False
 
     def read_bulk_byte(self, register_address):
@@ -367,15 +375,18 @@ class I2CSlave():
         :return: Arrays X(timestamps),Y1,Y2 ...
 
         """
-        if (tg < 20): tg = 20
+        if tg < 20:
+            tg = 20
         total_bytes = total_samples * sample_length
-        print('total bytes calculated : ', total_bytes)
-        if (total_bytes > self.MAX_SAMPLES * 2):
-            print('Sample limit exceeded. 10,000 int / 20000 bytes total')
+        print("total bytes calculated : ", total_bytes)
+        if total_bytes > self.MAX_SAMPLES * 2:
+            print("Sample limit exceeded. 10,000 int / 20000 bytes total")
             total_bytes = self.MAX_SAMPLES * 2
-            total_samples = total_bytes / sample_length  # 2* because sample array is in Integers, and we're using it to store bytes
+            total_samples = (
+                total_bytes / sample_length
+            )  # 2* because sample array is in Integers, and we're using it to store bytes
 
-        print('length of each channel : ', sample_length)
+        print("length of each channel : ", sample_length)
         self.total_bytes = total_bytes
         self.channels = sample_length
         self.samples = total_samples
@@ -389,16 +400,16 @@ class I2CSlave():
         self.H.__sendInt__(total_samples)  # total number of samples to record
         self.H.__sendInt__(tg)  # Timegap between samples.  1MHz timer clock
         self.H.__get_ack__()
-        return 1e-6 * self.samples * self.tg + .01
+        return 1e-6 * self.samples * self.tg + 0.01
 
     def __retrievebuffer__(self):
-        '''
+        """
         Fetch data acquired by the I2C scope. refer to :func:`__captureStart__`
-        '''
+        """
         total_int_samples = self.total_bytes // 2
         DATA_SPLITTING = 500
-        print('fetchin samples : ', total_int_samples, '   split', DATA_SPLITTING)
-        data = b''
+        print("fetchin samples : ", total_int_samples, "   split", DATA_SPLITTING)
+        data = b""
         for i in range(int(total_int_samples / DATA_SPLITTING)):
             self.H.__sendByte__(CP.ADC)
             self.H.__sendByte__(CP.GET_CAPTURE_CHANNEL)
@@ -408,7 +419,8 @@ class I2CSlave():
             rem = DATA_SPLITTING * 2 + 1
             for _ in range(200):
                 partial = self.H.interface.read(
-                    rem)  # reading int by int sometimes causes a communication error. this works better.
+                    rem
+                )  # reading int by int sometimes causes a communication error. this works better.
                 rem -= len(partial)
                 data += partial
                 # print ('partial: ',len(partial), end=",")
@@ -426,18 +438,19 @@ class I2CSlave():
             rem = 2 * (total_int_samples % DATA_SPLITTING) + 1
             for _ in range(20):
                 partial = self.H.interface.read(
-                    rem)  # reading int by int sometimes causes a communication error. this works better.
+                    rem
+                )  # reading int by int sometimes causes a communication error. this works better.
                 rem -= len(partial)
                 data += partial
                 # print ('partial: ',len(partial), end="")
                 if rem <= 0:
                     break
             data = data[:-1]
-        print('Final Pass : len=', len(data))
+        print("Final Pass : len=", len(data))
         return data
 
     def __dataProcessor__(self, data, *args):
-        '''
+        """
         Interpret data acquired by the I2C scope. refer to :func:`__retrievebuffer__` to fetch data
 
         ==================  ============================================================================================
@@ -447,17 +460,18 @@ class I2CSlave():
         *args               supply optional argument 'int' if consecutive bytes must be combined to form short integers
         ==================  ============================================================================================
 
-        '''
+        """
         data = [ord(a) for a in data]
-        if ('int' in args):
-            for a in range(self.channels * self.samples / 2): self.buff[a] = np.int16(
-                (data[a * 2] << 8) | data[a * 2 + 1])
+        if "int" in args:
+            for a in range(self.channels * self.samples / 2):
+                self.buff[a] = np.int16((data[a * 2] << 8) | data[a * 2 + 1])
         else:
-            for a in range(self.channels * self.samples): self.buff[a] = data[a]
+            for a in range(self.channels * self.samples):
+                self.buff[a] = data[a]
 
         yield np.linspace(0, self.tg * (self.samples - 1), self.samples)
         for a in range(int(self.channels / 2)):
-            yield self.buff[a:self.samples * self.channels / 2][::self.channels / 2]
+            yield self.buff[a: self.samples * self.channels / 2][:: self.channels / 2]
 
     def capture(self, location, sample_length, total_samples, tg, *args):
         """
@@ -494,7 +508,7 @@ class I2CSlave():
         return self.__dataProcessor__(data, *args)
 
 
-class I2C(I2CMaster, I2CSlave): # for backwards compatibility
+class I2C(I2CMaster, I2CSlave):  # for backwards compatibility
     """
     Methods to interact with the I2C port. An instance of Labtools.Packet_Handler must be passed to the init function
 
@@ -523,65 +537,78 @@ class I2C(I2CMaster, I2CSlave): # for backwards compatibility
         >>> print (x,y,z)
 
     """
+
     def __init__(self, H):
         I2CMaster.__init__(self, H)
         I2CSlave.__init__(self, H, None)
-        warn('I2C is deprecated; use I2CMaster and I2CSlave', DeprecationWarning)
+        warn("I2C is deprecated; use I2CMaster and I2CSlave", DeprecationWarning)
 
-    def start(self, address, rw): # pylint: disable=arguments-differ
+    def start(self, address, rw):  # pylint: disable=arguments-differ
         self.address = address
         return super().start(rw)
 
-    def restart(self, address, rw): # pylint: disable=arguments-differ
+    def restart(self, address, rw):  # pylint: disable=arguments-differ
         self.address = address
         return super().restart(rw)
 
-    def simpleRead(self, address, numbytes): # pylint: disable=arguments-differ
+    def simpleRead(self, address, numbytes):  # pylint: disable=arguments-differ
         self.address = address
         return super().simple_read(numbytes)
 
-    def simple_read_byte(self, address): # pylint: disable=arguments-differ
+    def simple_read_byte(self, address):  # pylint: disable=arguments-differ
         self.address = address
         return super().simple_read_byte()
 
-    def simple_read_int(self, address): # pylint: disable=arguments-differ
+    def simple_read_int(self, address):  # pylint: disable=arguments-differ
         self.address = address
         return super().simple_read_int()
 
-    def simple_read_long(self, address): # pylint: disable=arguments-differ
+    def simple_read_long(self, address):  # pylint: disable=arguments-differ
         self.address = address
         return super().simple_read_long()
 
-    def readBulk(self, device_address, register_address, bytes_to_read): # pylint: disable=arguments-differ
+    def readBulk(
+        self, device_address, register_address, bytes_to_read
+    ):  # pylint: disable=arguments-differ
         self.address = device_address
         return super().read_bulk(register_address, bytes_to_read)
 
-    def read_bulk_byte(self, device_address, register_address): # pylint: disable=arguments-differ
+    def read_bulk_byte(
+        self, device_address, register_address
+    ):  # pylint: disable=arguments-differ
         self.address = device_address
         return super().read_bulk_byte(register_address)
 
-    def read_bulk_int(self, device_address, register_address): # pylint: disable=arguments-differ
+    def read_bulk_int(
+        self, device_address, register_address
+    ):  # pylint: disable=arguments-differ
         self.address = device_address
         return super().read_bulk_int(register_address)
 
-    def read_bulk_long(self, device_address, register_address): # pylint: disable=arguments-differ
+    def read_bulk_long(
+        self, device_address, register_address
+    ):  # pylint: disable=arguments-differ
         self.address = device_address
         return super().read_bulk_long(register_address)
 
-    def writeBulk(self, device_address, bytestream): # pylint: disable=arguments-differ
+    def writeBulk(self, device_address, bytestream):  # pylint: disable=arguments-differ
         self.address = device_address
         return super().write_bulk(bytestream)
 
-    def __captureStart__(self, address, location, sample_length, total_samples, tg): # pylint: disable=arguments-differ
+    def __captureStart__(
+        self, address, location, sample_length, total_samples, tg
+    ):  # pylint: disable=arguments-differ
         self.address = address
         return super().__captureStart__(location, sample_length, total_samples, tg)
 
-    def capture(self, address, location, sample_length, total_samples, tg, *args): # pylint: disable=arguments-differ
+    def capture(
+        self, address, location, sample_length, total_samples, tg, *args
+    ):  # pylint: disable=arguments-differ
         self.address = address
         return super().capture(location, sample_length, total_samples, tg, *args)
 
 
-class SPI():
+class SPI:
     """
     Methods to interact with the SPI port. An instance of Packet_Handler must be passed to the init function
 
@@ -590,7 +617,9 @@ class SPI():
     def __init__(self, H):
         self.H = H
 
-    def set_parameters(self, primary_prescaler=0, secondary_prescaler=2, CKE=1, CKP=0, SMP=1):
+    def set_parameters(
+        self, primary_prescaler=0, secondary_prescaler=2, CKE=1, CKP=0, SMP=1
+    ):
         """
         sets SPI parameters.
 
@@ -609,7 +638,13 @@ class SPI():
         self.H.__sendByte__(CP.SPI_HEADER)
         self.H.__sendByte__(CP.SET_SPI_PARAMETERS)
         # 0Bhgfedcba - > <g>: modebit CKP,<f>: modebit CKE, <ed>:primary pre,<cba>:secondary pre
-        self.H.__sendByte__(secondary_prescaler | (primary_prescaler << 3) | (CKE << 5) | (CKP << 6) | (SMP << 7))
+        self.H.__sendByte__(
+            secondary_prescaler |
+            (primary_prescaler << 3) |
+            (CKE << 5) |
+            (CKP << 6) |
+            (SMP << 7)
+        )
         self.H.__get_ack__()
 
     def start(self, channel):
@@ -648,8 +683,10 @@ class SPI():
 
         """
         channel = channel.upper()
-        if channel in ['CS1', 'CS2']:
-            csnum = ['CS1', 'CS2'].index(channel) + 9  # chip select number 9=CSOUT1,10=CSOUT2
+        if channel in ["CS1", "CS2"]:
+            csnum = ["CS1", "CS2"].index(
+                channel
+            ) + 9  # chip select number 9=CSOUT1,10=CSOUT2
             self.H.__sendByte__(CP.SPI_HEADER)
             if state:
                 self.H.__sendByte__(CP.STOP_SPI)
@@ -657,7 +694,7 @@ class SPI():
                 self.H.__sendByte__(CP.START_SPI)
             self.H.__sendByte__(csnum)
         else:
-            print('Channel does not exist')
+            print("Channel does not exist")
 
     def stop(self, channel):
         """
@@ -773,33 +810,35 @@ class DACCHAN:
     def __init__(self, name, span, channum, **kwargs):
         self.name = name
         self.channum = channum
-        self.VREF = kwargs.get('VREF', 0)
-        self.SwitchedOff = kwargs.get('STATE', 0)
+        self.VREF = kwargs.get("VREF", 0)
+        self.SwitchedOff = kwargs.get("STATE", 0)
         self.range = span
-        slope = (span[1] - span[0])
+        slope = span[1] - span[0]
         intercept = span[0]
-        self.VToCode = np.poly1d([4095. / slope, -4095. * intercept / slope])
-        self.CodeToV = np.poly1d([slope / 4095., intercept])
+        self.VToCode = np.poly1d([4095.0 / slope, -4095.0 * intercept / slope])
+        self.CodeToV = np.poly1d([slope / 4095.0, intercept])
         self.calibration_enabled = False
         self.calibration_table = []
         self.slope = 1
         self.offset = 0
 
     def load_calibration_table(self, table):
-        self.calibration_enabled = 'table'
+        self.calibration_enabled = "table"
         self.calibration_table = table
 
     def load_calibration_twopoint(self, slope, offset):
-        self.calibration_enabled = 'twopoint'
+        self.calibration_enabled = "twopoint"
         self.slope = slope
         self.offset = offset
 
     # print('########################',slope,offset)
 
     def apply_calibration(self, v):
-        if self.calibration_enabled == 'table':  # Each point is individually calibrated
+        if self.calibration_enabled == "table":  # Each point is individually calibrated
             return int(np.clip(v + self.calibration_table[v], 0, 4095))
-        elif self.calibration_enabled == 'twopoint':  # Overall slope and offset correction is applied
+        elif (
+            self.calibration_enabled == "twopoint"
+        ):  # Overall slope and offset correction is applied
             # print (self.slope,self.offset,v)
             return int(np.clip(v * self.slope + self.offset, 0, 4095))
         else:
@@ -827,10 +866,14 @@ class MCP4728:
         self.I2C = I2C(self.H)
         self.SWITCHEDOFF = [0, 0, 0, 0]
         self.VREFS = [0, 0, 0, 0]  # 0=Vdd,1=Internal reference
-        self.CHANS = {'PCS': DACCHAN('PCS', [0, 3.3e-3], 0), 'PV3': DACCHAN('PV3', [0, 3.3], 1),
-                      'PV2': DACCHAN('PV2', [-3.3, 3.3], 2), 'PV1': DACCHAN('PV1', [-5., 5.], 3)}
-        self.CHANNEL_MAP = {0: 'PCS', 1: 'PV3', 2: 'PV2', 3: 'PV1'}
-        self.values = {'PV1': 0, 'PV2': 0, 'PV3': 0, 'PCS': 0}
+        self.CHANS = {
+            "PCS": DACCHAN("PCS", [0, 3.3e-3], 0),
+            "PV3": DACCHAN("PV3", [0, 3.3], 1),
+            "PV2": DACCHAN("PV2", [-3.3, 3.3], 2),
+            "PV1": DACCHAN("PV1", [-5.0, 5.0], 3),
+        }
+        self.CHANNEL_MAP = {0: "PCS", 1: "PV3", 2: "PV2", 3: "PV1"}
+        self.values = {"PV1": 0, "PV2": 0, "PV3": 0, "PCS": 0}
 
     def __ignoreCalibration__(self, name):
         self.CHANS[name].calibration_enabled = False
@@ -844,14 +887,14 @@ class MCP4728:
         return self.values[name]
 
     def setCurrent(self, v):
-        chan = self.CHANS['PCS']
+        chan = self.CHANS["PCS"]
         v = int(round(chan.VToCode(v)))
-        return self.__setRawVoltage__('PCS', v)
+        return self.__setRawVoltage__("PCS", v)
 
     def __setRawVoltage__(self, name, v):
         v = int(np.clip(v, 0, 4095))
         CHAN = self.CHANS[name]
-        '''
+        """
         self.H.__sendByte__(CP.DAC) #DAC write coming through.(MCP4728)
         self.H.__sendByte__(CP.SET_DAC)
         self.H.__sendByte__(self.addr<<1)	#I2C address
@@ -864,9 +907,11 @@ class MCP4728:
             self.H.__sendInt__((CHAN.VREF << 15) | (CHAN.SwitchedOff << 13) | (0 << 12) | v )
 
         self.H.__get_ack__()
-        '''
+        """
         val = self.CHANS[name].apply_calibration(v)
-        self.I2C.writeBulk(self.addr, [64 | (CHAN.channum << 1), (val >> 8) & 0x0F, val & 0xFF])
+        self.I2C.writeBulk(
+            self.addr, [64 | (CHAN.channum << 1), (val >> 8) & 0x0F, val & 0xFF]
+        )
         self.values[name] = CHAN.CodeToV(v)
         return self.values[name]
 
@@ -891,7 +936,7 @@ class MCP4728:
         print(vals)
 
 
-class NRF24L01():
+class NRF24L01:
     # Commands
     R_REG = 0x00
     W_REG = 0x20
@@ -986,17 +1031,17 @@ class NRF24L01():
         return True
 
     def rxmode(self):
-        '''
+        """
         Puts the radio into listening mode.
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_RXMODE)
         self.H.__get_ack__()
 
     def txmode(self):
-        '''
+        """
         Puts the radio into transmit mode.
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_TXMODE)
         self.H.__get_ack__()
@@ -1014,9 +1059,9 @@ class NRF24L01():
         self.H.__get_ack__()
 
     def rxchar(self):
-        '''
+        """
         Receives a 1 Byte payload
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_RXCHAR)
         value = self.H.__getByte__()
@@ -1024,18 +1069,18 @@ class NRF24L01():
         return value
 
     def txchar(self, char):
-        '''
+        """
         Transmits a single character
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_TXCHAR)
         self.H.__sendByte__(char)
         return self.H.__get_ack__() >> 4
 
     def hasData(self):
-        '''
+        """
         Check if the RX FIFO contains data
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_HASDATA)
         value = self.H.__getByte__()
@@ -1043,19 +1088,19 @@ class NRF24L01():
         return value
 
     def flush(self):
-        '''
+        """
         Flushes the TX and RX FIFOs
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_FLUSH)
         self.H.__get_ack__()
 
     def write_register(self, address, value):
-        '''
+        """
         write a  byte to any of the configuration registers on the Radio.
         address byte can either be located in the NRF24L01+ manual, or chosen
         from some of the constants defined in this module.
-        '''
+        """
         # print ('writing',address,value)
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_WRITEREG)
@@ -1064,10 +1109,10 @@ class NRF24L01():
         self.H.__get_ack__()
 
     def read_register(self, address):
-        '''
+        """
         Read the value of any of the configuration registers on the radio module.
 
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_READREG)
         self.H.__sendByte__(address)
@@ -1076,10 +1121,10 @@ class NRF24L01():
         return val
 
     def get_status(self):
-        '''
+        """
         Returns a byte representing the STATUS register on the radio.
         Refer to NRF24L01+ documentation for further details
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_GETSTATUS)
         val = self.H.__getByte__()
@@ -1093,13 +1138,13 @@ class NRF24L01():
         self.H.__get_ack__()
 
     def write_address(self, register, address):
-        '''
+        """
         register can be TX_ADDR, RX_ADDR_P0 -> RX_ADDR_P5
         3 byte address.  eg 0xFFABXX . XX cannot be FF
         if RX_ADDR_P1 needs to be used along with any of the pipes
         from P2 to P5, then RX_ADDR_P1 must be updated last.
         Addresses from P1-P5 must share the first two bytes.
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_WRITEADDRESS)
         self.H.__sendByte__(register)
@@ -1109,10 +1154,10 @@ class NRF24L01():
         self.H.__get_ack__()
 
     def selectAddress(self, address):
-        '''
+        """
         Sets RX_ADDR_P0 and TX_ADDR to the specified address.
 
-        '''
+        """
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_WRITEADDRESSES)
         self.H.__sendByte__(address & 0xFF)
@@ -1134,32 +1179,36 @@ class NRF24L01():
     def write_payload(self, data, verbose=False, **args):
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_WRITEPAYLOAD)
-        numbytes = len(
-            data) | 0x80  # 0x80 implies transmit immediately. Otherwise it will simply load the TX FIFO ( used by ACK_payload)
-        if (args.get('rxmode', False)): numbytes |= 0x40
+        numbytes = (
+            len(data) | 0x80
+        )  # 0x80 implies transmit immediately. Otherwise it will simply load the TX FIFO ( used by ACK_payload)
+        if args.get("rxmode", False):
+            numbytes |= 0x40
         self.H.__sendByte__(numbytes)
         self.H.__sendByte__(self.TX_PAYLOAD)
         for a in data:
             self.H.__sendByte__(a)
         val = self.H.__get_ack__() >> 4
-        if (verbose):
+        if verbose:
             if val & 0x2:
-                print(' NRF radio not found. Connect one to the add-on port')
+                print(" NRF radio not found. Connect one to the add-on port")
             elif val & 0x1:
-                print(' Node probably dead/out of range. It failed to acknowledge')
+                print(" Node probably dead/out of range. It failed to acknowledge")
             return
         return val
 
     def I2C_scan(self):
-        '''
+        """
         Scans the I2C bus and returns a list of live addresses
-        '''
+        """
         x = self.transaction([self.I2C_COMMANDS | self.I2C_SCAN | 0x80], timeout=500)
-        if not x: return []
-        if not sum(x): return []
+        if not x:
+            return []
+        if not sum(x):
+            return []
         addrs = []
         for a in range(16):
-            if (x[a] ^ 255):
+            if x[a] ^ 255:
                 for b in range(8):
                     if x[a] & (0x80 >> b) == 0:
                         addr = 8 * a + b
@@ -1167,24 +1216,27 @@ class NRF24L01():
         return addrs
 
     def GuessingScan(self):
-        '''
+        """
         Scans the I2C bus and also prints the possible devices associated with each found address
-        '''
+        """
         from PSL import sensorlist
-        print('Scanning addresses 0-127...')
+
+        print("Scanning addresses 0-127...")
         x = self.transaction([self.I2C_COMMANDS | self.I2C_SCAN | 0x80], timeout=500)
-        if not x: return []
-        if not sum(x): return []
+        if not x:
+            return []
+        if not sum(x):
+            return []
         addrs = []
-        print('Address', '\t', 'Possible Devices')
+        print("Address", "\t", "Possible Devices")
 
         for a in range(16):
-            if (x[a] ^ 255):
+            if x[a] ^ 255:
                 for b in range(8):
                     if x[a] & (0x80 >> b) == 0:
                         addr = 8 * a + b
                         addrs.append(addr)
-                        print(hex(addr), '\t\t', sensorlist.sensors.get(addr, 'None'))
+                        print(hex(addr), "\t\t", sensorlist.sensors.get(addr, "None"))
 
         return addrs
 
@@ -1194,10 +1246,12 @@ class NRF24L01():
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_TRANSACTION)
         self.H.__sendByte__(len(data))  # total Data bytes coming through
-        if 'listen' not in args: args['listen'] = True
-        if args.get('listen', False): data[0] |= 0x80  # You need this if hardware must wait for a reply
-        timeout = args.get('timeout', 200)
-        verbose = args.get('verbose', False)
+        if "listen" not in args:
+            args["listen"] = True
+        if args.get("listen", False):
+            data[0] |= 0x80  # You need this if hardware must wait for a reply
+        timeout = args.get("timeout", 200)
+        verbose = args.get("verbose", False)
         self.H.__sendInt__(timeout)  # timeout.
         for a in data:
             self.H.__sendByte__(a)
@@ -1210,23 +1264,37 @@ class NRF24L01():
         else:
             data = []
         val = self.H.__get_ack__() >> 4
-        if (verbose):
-            if val & 0x1: print(time.time(), '%s Err. Node not found' % (hex(self.CURRENT_ADDRESS)))
-            if val & 0x2: print(time.time(),
-                                '%s Err. NRF on-board transmitter not found' % (hex(self.CURRENT_ADDRESS)))
-            if val & 0x4 and args['listen']: print(time.time(),
-                                                   '%s Err. Node received command but did not reply' % (
-                                                       hex(self.CURRENT_ADDRESS)))
+        if verbose:
+            if val & 0x1:
+                print(
+                    time.time(), "%s Err. Node not found" % (hex(self.CURRENT_ADDRESS))
+                )
+            if val & 0x2:
+                print(
+                    time.time(),
+                    "%s Err. NRF on-board transmitter not found"
+                    % (hex(self.CURRENT_ADDRESS)),
+                )
+            if val & 0x4 and args["listen"]:
+                print(
+                    time.time(),
+                    "%s Err. Node received command but did not reply"
+                    % (hex(self.CURRENT_ADDRESS)),
+                )
         if val & 0x7:  # Something didn't go right.
             self.flush()
-            self.sigs[self.CURRENT_ADDRESS] = self.sigs[self.CURRENT_ADDRESS] * 50 / 51.
+            self.sigs[self.CURRENT_ADDRESS] = (
+                self.sigs[self.CURRENT_ADDRESS] * 50 / 51.0
+            )
             return False
 
-        self.sigs[self.CURRENT_ADDRESS] = (self.sigs[self.CURRENT_ADDRESS] * 50 + 1) / 51.
+        self.sigs[self.CURRENT_ADDRESS] = (
+            self.sigs[self.CURRENT_ADDRESS] * 50 + 1
+        ) / 51.0
         return [ord(a) for a in data]
 
     def transactionWithRetries(self, data, **args):
-        retries = args.get('retries', 5)
+        retries = args.get("retries", 5)
         reply = False
         while retries > 0:
             reply = self.transaction(data, verbose=(retries == 1), **args)
@@ -1236,14 +1304,14 @@ class NRF24L01():
         return reply
 
     def write_ack_payload(self, data, pipe):
-        if (len(data) != self.ACK_PAYLOAD_SIZE):
+        if len(data) != self.ACK_PAYLOAD_SIZE:
             self.ACK_PAYLOAD_SIZE = len(data)
             if self.ACK_PAYLOAD_SIZE > 15:
-                print('too large. truncating.')
+                print("too large. truncating.")
                 self.ACK_PAYLOAD_SIZE = 15
                 data = data[:15]
             else:
-                print('ack payload size:', self.ACK_PAYLOAD_SIZE)
+                print("ack payload size:", self.ACK_PAYLOAD_SIZE)
 
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_WRITEPAYLOAD)
@@ -1254,22 +1322,19 @@ class NRF24L01():
         return self.H.__get_ack__() >> 4
 
     def start_token_manager(self):
-        '''
-        '''
+        """"""
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_START_TOKEN_MANAGER)
         self.H.__get_ack__()
 
     def stop_token_manager(self):
-        '''
-        '''
+        """"""
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_STOP_TOKEN_MANAGER)
         self.H.__get_ack__()
 
     def total_tokens(self):
-        '''
-        '''
+        """"""
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_TOTAL_TOKENS)
         x = self.H.__getByte__()
@@ -1277,8 +1342,7 @@ class NRF24L01():
         return x
 
     def fetch_report(self, num):
-        '''
-        '''
+        """"""
         self.H.__sendByte__(CP.NRFL01)
         self.H.__sendByte__(CP.NRF_REPORTS)
         self.H.__sendByte__(num)
@@ -1291,7 +1355,7 @@ class NRF24L01():
         if sum(data) == 0:
             return lst
         for a in range(len(data)):
-            if (data[a] ^ 255):
+            if data[a] ^ 255:
                 for b in range(8):
                     if data[a] & (0x80 >> b) == 0:
                         addr = 8 * a + b
@@ -1299,7 +1363,7 @@ class NRF24L01():
         return lst
 
     def get_nodelist(self):
-        '''
+        """
         Refer to the variable 'nodelist' if you simply want a list of nodes that either registered while your code was
         running , or were loaded from the firmware buffer(max 15 entries)
 
@@ -1309,22 +1373,24 @@ class NRF24L01():
         The dictionary object returned by this function [addresses paired with arrays containing their registered sensors]
         is filtered by checking with each node if they are alive.
 
-        '''
+        """
 
         total = self.total_tokens()
         if self.nodepos != total:
             for nm in range(self.NODELIST_MAXLENGTH):
                 dat = self.fetch_report(nm)
                 txrx = (dat[0]) | (dat[1] << 8) | (dat[2] << 16)
-                if not txrx: continue
+                if not txrx:
+                    continue
                 self.nodelist[txrx] = self.__decode_I2C_list__(dat[3:19])
                 self.nodepos = total
                 # else:
-                #	self.__delete_registered_node__(nm)
+                # 	self.__delete_registered_node__(nm)
 
         filtered_lst = {}
         for a in self.nodelist:
-            if self.isAlive(a): filtered_lst[a] = self.nodelist[a]
+            if self.isAlive(a):
+                filtered_lst[a] = self.nodelist[a]
 
         return filtered_lst
 
@@ -1336,24 +1402,27 @@ class NRF24L01():
 
     def __delete_all_registered_nodes__(self):
         while self.total_tokens():
-            print('-')
+            print("-")
             self.__delete_registered_node__(0)
 
     def isAlive(self, addr):
         self.selectAddress(addr)
-        return self.transaction([self.NRF_COMMANDS | self.NRF_READ_REGISTER] + [self.R_STATUS], timeout=100,
-                                verbose=False)
+        return self.transaction(
+            [self.NRF_COMMANDS | self.NRF_READ_REGISTER] + [self.R_STATUS],
+            timeout=100,
+            verbose=False,
+        )
 
     def init_shockburst_transmitter(self, **args):
-        '''
+        """
         Puts the radio into transmit mode.
         Dynamic Payload with auto acknowledge is enabled.
         upto 5 retransmits with 1ms delay between each in case a node doesn't respond in time
         Receivers must acknowledge payloads
-        '''
-        self.PAYLOAD_SIZE = args.get('PAYLOAD_SIZE', self.PAYLOAD_SIZE)
-        myaddr = args.get('myaddr', 0xAAAA01)
-        sendaddr = args.get('sendaddr', 0xAAAA01)
+        """
+        self.PAYLOAD_SIZE = args.get("PAYLOAD_SIZE", self.PAYLOAD_SIZE)
+        myaddr = args.get("myaddr", 0xAAAA01)
+        sendaddr = args.get("sendaddr", 0xAAAA01)
 
         self.init()
         # shockburst
@@ -1365,15 +1434,15 @@ class NRF24L01():
         self.flush()
 
     def init_shockburst_receiver(self, **args):
-        '''
+        """
         Puts the radio into receive mode.
         Dynamic Payload with auto acknowledge is enabled.
-        '''
-        self.PAYLOAD_SIZE = args.get('PAYLOAD_SIZE', self.PAYLOAD_SIZE)
-        if 'myaddr0' not in args:
-            args['myaddr0'] = 0xA523B5
+        """
+        self.PAYLOAD_SIZE = args.get("PAYLOAD_SIZE", self.PAYLOAD_SIZE)
+        if "myaddr0" not in args:
+            args["myaddr0"] = 0xA523B5
         # if 'sendaddr' non in args:
-        #	args['sendaddr']=0xA523B5
+        # 	args['sendaddr']=0xA523B5
         print(args)
         self.init()
         self.write_register(self.RF_SETUP, 0x26)  # 2MBPS speed
@@ -1382,17 +1451,22 @@ class NRF24L01():
         # self.write_address(self.RX_ADDR_P0,myaddr)	#will receive the ACK Payload from that node
         enabled_pipes = 0  # pipes to be enabled
         for a in range(0, 6):
-            x = args.get('myaddr' + str(a), None)
+            x = args.get("myaddr" + str(a), None)
             if x:
                 print(hex(x), hex(self.RX_ADDR_P0 + a))
-                enabled_pipes |= (1 << a)
+                enabled_pipes |= 1 << a
                 self.write_address(self.RX_ADDR_P0 + a, x)
-        P15_base_address = args.get('myaddr1', None)
-        if P15_base_address: self.write_address(self.RX_ADDR_P1, P15_base_address)
+        P15_base_address = args.get("myaddr1", None)
+        if P15_base_address:
+            self.write_address(self.RX_ADDR_P1, P15_base_address)
 
         self.write_register(self.EN_RXADDR, enabled_pipes)  # enable pipes
-        self.write_register(self.EN_AA, enabled_pipes)  # enable auto Acknowledge on all pipes
-        self.write_register(self.DYNPD, enabled_pipes)  # enable dynamic payload on Data pipes
+        self.write_register(
+            self.EN_AA, enabled_pipes
+        )  # enable auto Acknowledge on all pipes
+        self.write_register(
+            self.DYNPD, enabled_pipes
+        )  # enable dynamic payload on Data pipes
         self.write_register(self.FEATURE, 0x06)  # enable dynamic payload length
         # self.write_register(self.RX_PW_P0,self.PAYLOAD_SIZE)
 
@@ -1401,7 +1475,7 @@ class NRF24L01():
         self.flush()
 
 
-class RadioLink():
+class RadioLink:
     ADC_COMMANDS = 1
     READ_ADC = 0 << 4
 
@@ -1422,10 +1496,12 @@ class RadioLink():
 
     def __init__(self, NRF, **args):
         self.NRF = NRF
-        if 'address' in args:
-            self.ADDRESS = args.get('address', False)
+        if "address" in args:
+            self.ADDRESS = args.get("address", False)
         else:
-            print('Address not specified. Add "address=0x....." argument while instantiating')
+            print(
+                'Address not specified. Add "address=0x....." argument while instantiating'
+            )
             self.ADDRESS = 0x010101
 
     def __selectMe__(self):
@@ -1435,20 +1511,25 @@ class RadioLink():
     def I2C_scan(self):
         self.__selectMe__()
         from PSL import sensorlist
-        print('Scanning addresses 0-127...')
-        x = self.NRF.transaction([self.I2C_COMMANDS | self.SCAN_I2C | 0x80], timeout=500)
-        if not x: return []
-        if not sum(x): return []
+
+        print("Scanning addresses 0-127...")
+        x = self.NRF.transaction(
+            [self.I2C_COMMANDS | self.SCAN_I2C | 0x80], timeout=500
+        )
+        if not x:
+            return []
+        if not sum(x):
+            return []
         addrs = []
-        print('Address', '\t', 'Possible Devices')
+        print("Address", "\t", "Possible Devices")
 
         for a in range(16):
-            if (x[a] ^ 255):
+            if x[a] ^ 255:
                 for b in range(8):
                     if x[a] & (0x80 >> b) == 0:
                         addr = 8 * a + b
                         addrs.append(addr)
-                        print(hex(addr), '\t\t', sensorlist.sensors.get(addr, 'None'))
+                        print(hex(addr), "\t\t", sensorlist.sensors.get(addr, "None"))
 
         return addrs
 
@@ -1457,7 +1538,7 @@ class RadioLink():
         if sum(data) == 0:
             return lst
         for a in range(len(data)):
-            if (data[a] ^ 255):
+            if data[a] ^ 255:
                 for b in range(8):
                     if data[a] & (0x80 >> b) == 0:
                         addr = 8 * a + b
@@ -1466,24 +1547,39 @@ class RadioLink():
 
     def writeI2C(self, I2C_addr, regaddress, bytes):
         self.__selectMe__()
-        return self.NRF.transaction([self.I2C_COMMANDS | self.I2C_WRITE] + [I2C_addr] + [regaddress] + bytes)
+        return self.NRF.transaction(
+            [self.I2C_COMMANDS | self.I2C_WRITE] + [I2C_addr] + [regaddress] + bytes
+        )
 
     def readI2C(self, I2C_addr, regaddress, numbytes):
         self.__selectMe__()
-        return self.NRF.transaction([self.I2C_COMMANDS | self.I2C_TRANSACTION] + [I2C_addr] + [regaddress] + [numbytes])
+        return self.NRF.transaction(
+            [self.I2C_COMMANDS | self.I2C_TRANSACTION] +
+            [I2C_addr] +
+            [regaddress] +
+            [numbytes]
+        )
 
     def writeBulk(self, I2C_addr, bytes):
         self.__selectMe__()
-        return self.NRF.transaction([self.I2C_COMMANDS | self.I2C_WRITE] + [I2C_addr] + bytes)
+        return self.NRF.transaction(
+            [self.I2C_COMMANDS | self.I2C_WRITE] + [I2C_addr] + bytes
+        )
 
     def readBulk(self, I2C_addr, regaddress, numbytes):
         self.__selectMe__()
         return self.NRF.transactionWithRetries(
-            [self.I2C_COMMANDS | self.I2C_TRANSACTION] + [I2C_addr] + [regaddress] + [numbytes])
+            [self.I2C_COMMANDS | self.I2C_TRANSACTION] +
+            [I2C_addr] +
+            [regaddress] +
+            [numbytes]
+        )
 
     def simpleRead(self, I2C_addr, numbytes):
         self.__selectMe__()
-        return self.NRF.transactionWithRetries([self.I2C_COMMANDS | self.I2C_READ] + [I2C_addr] + [numbytes])
+        return self.NRF.transactionWithRetries(
+            [self.I2C_COMMANDS | self.I2C_READ] + [I2C_addr] + [numbytes]
+        )
 
     def readADC(self, channel):
         self.__selectMe__()
@@ -1501,12 +1597,16 @@ class RadioLink():
         self.__selectMe__()
         brgval = int(32e6 / freq / 4 - 1)
         print(brgval)
-        return self.NRF.transaction([self.I2C_COMMANDS | self.I2C_CONFIG] + [brgval], listen=False)
+        return self.NRF.transaction(
+            [self.I2C_COMMANDS | self.I2C_CONFIG] + [brgval], listen=False
+        )
 
     def write_register(self, reg, val):
         self.__selectMe__()
         # print ('writing to ',reg,val)
-        return self.NRF.transaction([self.NRF_COMMANDS | self.NRF_WRITE_REGISTER] + [reg, val], listen=False)
+        return self.NRF.transaction(
+            [self.NRF_COMMANDS | self.NRF_WRITE_REGISTER] + [reg, val], listen=False
+        )
 
     def WS2812B(self, cols):
         """
@@ -1530,11 +1630,13 @@ class RadioLink():
         self.__selectMe__()
         colarray = []
         for a in cols:
-            colarray.append(int('{:08b}'.format(int(a[1]))[::-1], 2))
-            colarray.append(int('{:08b}'.format(int(a[0]))[::-1], 2))
-            colarray.append(int('{:08b}'.format(int(a[2]))[::-1], 2))
+            colarray.append(int("{:08b}".format(int(a[1]))[::-1], 2))
+            colarray.append(int("{:08b}".format(int(a[0]))[::-1], 2))
+            colarray.append(int("{:08b}".format(int(a[2]))[::-1], 2))
 
-        res = self.NRF.transaction([self.MISC_COMMANDS | self.WS2812B_CMD] + colarray, listen=False)
+        res = self.NRF.transaction(
+            [self.MISC_COMMANDS | self.WS2812B_CMD] + colarray, listen=False
+        )
         return res
 
     def read_register(self, reg):

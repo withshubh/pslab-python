@@ -5,7 +5,7 @@ def connect(route, **args):
     return BRIDGE(route, **args)
 
 
-class BRIDGE():
+class BRIDGE:
     POWER_ON = 0x01
     RESET = 0x07
     RES_1000mLx = 0x10
@@ -13,27 +13,28 @@ class BRIDGE():
     RES_4000mLx = 0x13
 
     gain_choices = [RES_500mLx, RES_1000mLx, RES_4000mLx]
-    gain_literal_choices = ['500mLx', '1000mLx', '4000mLx']
+    gain_literal_choices = ["500mLx", "1000mLx", "4000mLx"]
     gain = 0
-    scaling = [2, 1, .25]
+    scaling = [2, 1, 0.25]
 
     # --------------Parameters--------------------
     # This must be defined in order to let GUIs automatically create menus
     # for changing various options of this sensor
     # It's a dictionary of the string representations of functions matched with an array
     # of options that each one can accept
-    params = {'init': None,
-              'setRange': gain_literal_choices,
-              }
+    params = {
+        "init": None,
+        "setRange": gain_literal_choices,
+    }
 
     NUMPLOTS = 1
-    PLOTNAMES = ['Lux']
+    PLOTNAMES = ["Lux"]
     ADDRESS = 0x23
-    name = 'Luminosity'
+    name = "Luminosity"
 
     def __init__(self, I2C, **args):
         self.I2C = I2C
-        self.ADDRESS = args.get('address', 0x23)
+        self.ADDRESS = args.get("address", 0x23)
         self.init()
 
     def init(self):

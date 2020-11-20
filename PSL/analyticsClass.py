@@ -4,7 +4,7 @@ from typing import Tuple
 import numpy as np
 
 
-class analyticsClass():
+class analyticsClass:
     """
     This class contains methods that allow mathematical analysis such as curve fitting
     """
@@ -42,7 +42,9 @@ class analyticsClass():
         return a4 + a1 * np.sin(abs(a2 * (2 * np.pi)) * x + a3)
 
     def squareFunc(self, x, amp, freq, phase, dc, offset):
-        return offset + amp * self.signal.square(2 * np.pi * freq * (x - phase), duty=dc)
+        return offset + amp * self.signal.square(
+            2 * np.pi * freq * (x - phase), duty=dc
+        )
 
     # -------------------------- Exponential Fit ----------------------------------------
 
@@ -54,7 +56,7 @@ class analyticsClass():
         v80 = v[0] * 0.8
         for k in range(size - 1):
             if v[k] < v80:
-                rc = t[k] / .223
+                rc = t[k] / 0.223
                 break
         pg = [v[0], rc, 0]
         po, err = self.optimize.curve_fit(self.func, t, v, pg)
@@ -67,13 +69,15 @@ class analyticsClass():
         N = len(xReal)
         mx = yReal.max()
         mn = yReal.min()
-        OFFSET = (mx + mn) / 2.
-        amplitude = (np.average(yReal[yReal > OFFSET]) - np.average(yReal[yReal < OFFSET])) / 2.0
+        OFFSET = (mx + mn) / 2.0
+        amplitude = (
+            np.average(yReal[yReal > OFFSET]) - np.average(yReal[yReal < OFFSET])
+        ) / 2.0
         yTmp = np.select([yReal < OFFSET, yReal > OFFSET], [0, 2])
         bools = abs(np.diff(yTmp)) > 1
         edges = xReal[bools]
         levels = yTmp[bools]
-        frequency = 1. / (edges[2] - edges[0])
+        frequency = 1.0 / (edges[2] - edges[0])
 
         phase = edges[0]  # .5*np.pi*((yReal[0]-offset)/amplitude)
         dc = 0.5
@@ -87,11 +91,12 @@ class analyticsClass():
         guess = [amplitude, frequency, phase, dc, 0]
 
         try:
-            (amplitude, frequency, phase, dc, offset), pcov = self.optimize.curve_fit(self.squareFunc, xReal,
-                                                                                      yReal - OFFSET, guess)
+            (amplitude, frequency, phase, dc, offset), pcov = self.optimize.curve_fit(
+                self.squareFunc, xReal, yReal - OFFSET, guess
+            )
             offset += OFFSET
 
-            if (frequency < 0):
+            if frequency < 0:
                 # print ('negative frq')
                 return False
 
@@ -99,7 +104,7 @@ class analyticsClass():
             amp = abs(amplitude)
             pcov[0] *= 1e6
             # print (pcov)
-            if (abs(pcov[-1][0]) > 1e-6):
+            if abs(pcov[-1][0]) > 1e-6:
                 False
             return [amp, freq, phase, dc, offset]
         except:
@@ -107,35 +112,36 @@ class analyticsClass():
 
     def sineFit(self, xReal, yReal, **kwargs):
         N = len(xReal)
-        OFFSET = (yReal.max() + yReal.min()) / 2.
+        OFFSET = (yReal.max() + yReal.min()) / 2.0
         yhat = self.fftpack.rfft(yReal - OFFSET)
         idx = (yhat ** 2).argmax()
         freqs = self.fftpack.rfftfreq(N, d=(xReal[1] - xReal[0]) / (2 * np.pi))
-        frequency = kwargs.get('freq', freqs[idx])
-        frequency /= (2 * np.pi)  # Convert angular velocity to freq
-        amplitude = kwargs.get('amp', (yReal.max() - yReal.min()) / 2.0)
-        phase = kwargs.get('phase', 0)  # .5*np.pi*((yReal[0]-offset)/amplitude)
+        frequency = kwargs.get("freq", freqs[idx])
+        frequency /= 2 * np.pi  # Convert angular velocity to freq
+        amplitude = kwargs.get("amp", (yReal.max() - yReal.min()) / 2.0)
+        phase = kwargs.get("phase", 0)  # .5*np.pi*((yReal[0]-offset)/amplitude)
         guess = [amplitude, frequency, phase, 0]
         try:
-            (amplitude, frequency, phase, offset), pcov = self.optimize.curve_fit(self.sineFunc, xReal, yReal - OFFSET,
-                                                                                  guess)
+            (amplitude, frequency, phase, offset), pcov = self.optimize.curve_fit(
+                self.sineFunc, xReal, yReal - OFFSET, guess
+            )
             offset += OFFSET
-            ph = ((phase) * 180 / (np.pi))
-            if (frequency < 0):
+            ph = (phase) * 180 / (np.pi)
+            if frequency < 0:
                 # print ('negative frq')
                 return False
 
-            if (amplitude < 0):
+            if amplitude < 0:
                 ph -= 180
 
-            if (ph < 0):
+            if ph < 0:
                 ph = (ph + 720) % 360
 
             freq = 1e6 * abs(frequency)
             amp = abs(amplitude)
             pcov[0] *= 1e6
             # print (pcov)
-            if (abs(pcov[-1][0]) > 1e-6):
+            if abs(pcov[-1][0]) > 1e-6:
                 return False
             return [amp, freq, offset, ph]
         except:
@@ -143,10 +149,13 @@ class analyticsClass():
 
     def find_frequency(self, v, si):  # voltages, samplimg interval is seconds
         from numpy import fft
+
         NP = len(v)
         v = v - v.mean()  # remove DC component
-        frq = fft.fftfreq(NP, si)[:NP / 2]  # take only the +ive half of the frequncy array
-        amp = abs(fft.fft(v)[:NP / 2]) / NP  # and the fft result
+        frq = fft.fftfreq(NP, si)[
+            : NP / 2
+        ]  # take only the +ive half of the frequncy array
+        amp = abs(fft.fft(v)[: NP / 2]) / NP  # and the fft result
         index = amp.argmax()  # search for the tallest peak, the fundamental
         return frq[index]
 
@@ -182,13 +191,16 @@ class analyticsClass():
     def amp_spectrum(self, v, si, nhar=8):
         # voltages, samplimg interval is seconds, number of harmonics to retain
         from numpy import fft
+
         NP = len(v)
-        frq = fft.fftfreq(NP, si)[:NP / 2]  # take only the +ive half of the frequncy array
-        amp = abs(fft.fft(v)[:NP / 2]) / NP  # and the fft result
+        frq = fft.fftfreq(NP, si)[
+            : NP / 2
+        ]  # take only the +ive half of the frequncy array
+        amp = abs(fft.fft(v)[: NP / 2]) / NP  # and the fft result
         index = amp.argmax()  # search for the tallest peak, the fundamental
         if index == 0:  # DC component is dominating
             index = amp[4:].argmax()  # skip frequencies close to zero
-        return frq[:index * nhar], amp[:index * nhar]  # restrict to 'nhar' harmonics
+        return frq[: index * nhar], amp[: index * nhar]  # restrict to 'nhar' harmonics
 
     def dampedSine(self, x, amp, freq, phase, offset, damp):
         """
@@ -197,8 +209,8 @@ class analyticsClass():
         """
         return offset + amp * np.exp(-damp * x) * np.sin(abs(freq) * x + phase)
 
-    def getGuessValues(self, xReal, yReal, func='sine'):
-        if (func == 'sine' or func == 'damped sine'):
+    def getGuessValues(self, xReal, yReal, func="sine"):
+        if func == "sine" or func == "damped sine":
             N = len(xReal)
             offset = np.average(yReal)
             yhat = self.fftpack.rfft(yReal - offset)
@@ -207,15 +219,15 @@ class analyticsClass():
             frequency = freqs[idx]
 
             amplitude = (yReal.max() - yReal.min()) / 2.0
-            phase = 0.
-            if func == 'sine':
+            phase = 0.0
+            if func == "sine":
                 return amplitude, frequency, phase, offset
-            if func == 'damped sine':
+            if func == "damped sine":
                 return amplitude, frequency, phase, offset, 0
 
     def arbitFit(self, xReal, yReal, func, **args):
         N = len(xReal)
-        guess = args.get('guess', [])
+        guess = args.get("guess", [])
         try:
             results, pcov = self.optimize.curve_fit(func, xReal, yReal, guess)
             pcov[0] *= 1e6
@@ -224,10 +236,10 @@ class analyticsClass():
             return False, [], []
 
     def fft(self, ya, si):
-        '''
+        """
         Returns positive half of the Fourier transform of the signal ya.
         Sampling interval 'si', in milliseconds
-        '''
+        """
         ns = len(ya)
         if ns % 2 == 1:  # odd values of np give exceptions
             ns -= 1  # make it even
@@ -240,24 +252,28 @@ class analyticsClass():
         return x[0], y[0]
 
     def sineFitAndDisplay(self, chan, displayObject):
-        '''
+        """
         chan : an object containing a get_xaxis, and a get_yaxis method.
         displayObject : an object containing a setValue method
 
         Fits against a sine function, and writes to the object
-        '''
+        """
         fitres = None
-        fit = ''
+        fit = ""
         try:
             fitres = self.sineFit(chan.get_xaxis(), chan.get_yaxis())
             if fitres:
                 amp, freq, offset, phase = fitres
-                if amp > 0.05: fit = 'Voltage=%s\nFrequency=%s' % (
-                    apply_si_prefix(amp, 'V'), apply_si_prefix(freq, 'Hz'))
+                if amp > 0.05:
+                    fit = "Voltage=%s\nFrequency=%s" % (
+                        apply_si_prefix(amp, "V"),
+                        apply_si_prefix(freq, "Hz"),
+                    )
         except Exception as e:
             fitres = None
 
-        if not fitres or len(fit) == 0: fit = 'Voltage=%s\n' % (apply_si_prefix(np.average(chan.get_yaxis()), 'V'))
+        if not fitres or len(fit) == 0:
+            fit = "Voltage=%s\n" % (apply_si_prefix(np.average(chan.get_yaxis()), "V"))
         displayObject.setValue(fit)
         if fitres:
             return fitres
@@ -265,14 +281,14 @@ class analyticsClass():
             return 0, 0, 0, 0
 
     def rmsAndDisplay(self, data, displayObject):
-        '''
+        """
         data : an array of numbers
         displayObject : an object containing a setValue method
 
         Fits against a sine function, and writes to the object
-        '''
+        """
         rms = self.RMS(data)
-        displayObject.setValue('Voltage=%s' % (apply_si_prefix(rms, 'V')))
+        displayObject.setValue("Voltage=%s" % (apply_si_prefix(rms, "V")))
         return rms
 
     def RMS(self, data):
@@ -281,14 +297,16 @@ class analyticsClass():
 
     def butter_notch(self, lowcut, highcut, fs, order=5):
         from scipy.signal import butter
+
         nyq = 0.5 * fs
         low = lowcut / nyq
         high = highcut / nyq
-        b, a = butter(order, [low, high], btype='bandstop')
+        b, a = butter(order, [low, high], btype="bandstop")
         return b, a
 
     def butter_notch_filter(self, data, lowcut, highcut, fs, order=5):
         from scipy.signal import lfilter
+
         b, a = self.butter_notch(lowcut, highcut, fs, order=order)
         y = lfilter(b, a, data)
         return y

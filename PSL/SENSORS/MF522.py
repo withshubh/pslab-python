@@ -15,7 +15,9 @@ class MF522:
     DivIEnReg = 0x03 << 1  # enable and disable interrupt request control bits
     ComIrqReg = 0x04 << 1  # interrupt request bits
     DivIrqReg = 0x05 << 1  # interrupt request bits
-    ErrorReg = 0x06 << 1  # error bits showing the error status of the last command executed
+    ErrorReg = (
+        0x06 << 1
+    )  # error bits showing the error status of the last command executed
     Status1Reg = 0x07 << 1  # communication status bits
     Status2Reg = 0x08 << 1  # receiver and transmitter status bits
     FIFODataReg = 0x09 << 1  # input and output of 64 byte FIFO buffer
@@ -23,12 +25,16 @@ class MF522:
     WaterLevelReg = 0x0B << 1  # level for FIFO underflow and overflow warning
     ControlReg = 0x0C << 1  # miscellaneous control registers
     BitFramingReg = 0x0D << 1  # adjustments for bit-oriented frames
-    CollReg = 0x0E << 1  # bit position of the first bit-collision detected on the RF sciencelab
+    CollReg = (
+        0x0E << 1
+    )  # bit position of the first bit-collision detected on the RF sciencelab
 
     ModeReg = 0x11 << 1  # defines general modes for transmitting and receiving
     TxModeReg = 0x12 << 1  # defines transmission data rate and framing
     RxModeReg = 0x13 << 1  # defines reception data rate and framing
-    TxControlReg = 0x14 << 1  # controls the logical behavior of the antenna driver pins TX1 and TX2
+    TxControlReg = (
+        0x14 << 1
+    )  # controls the logical behavior of the antenna driver pins TX1 and TX2
     TxASKReg = 0x15 << 1  # controls the setting of the transmission modulation
     TxSelReg = 0x16 << 1  # selects the internal sources for the antenna driver
     RxSelReg = 0x17 << 1  # selects internal receiver settings
@@ -42,11 +48,19 @@ class MF522:
     CRCResultRegL = 0x22 << 1
     ModWidthReg = 0x24 << 1  # controls the ModWidth setting?
     RFCfgReg = 0x26 << 1  # configures the receiver gain
-    GsNReg = 0x27 << 1  # selects the conductance of the antenna driver pins TX1 and TX2 for modulation
-    CWGsPReg = 0x28 << 1  # defines the conductance of the p-driver output during periods of no modulation
-    ModGsPReg = 0x29 << 1  # defines the conductance of the p-driver output during periods of modulation
+    GsNReg = (
+        0x27 << 1
+    )  # selects the conductance of the antenna driver pins TX1 and TX2 for modulation
+    CWGsPReg = (
+        0x28 << 1
+    )  # defines the conductance of the p-driver output during periods of no modulation
+    ModGsPReg = (
+        0x29 << 1
+    )  # defines the conductance of the p-driver output during periods of modulation
     TModeReg = 0x2A << 1  # defines settings for the internal timer
-    TPrescalerReg = 0x2B << 1  # the lower 8 bits of the TPrescaler value. The 4 high bits are in TModeReg.
+    TPrescalerReg = (
+        0x2B << 1
+    )  # the lower 8 bits of the TPrescaler value. The 4 high bits are in TModeReg.
     TReloadRegH = 0x2C << 1  # defines the 16-bit timer reload value
     TReloadRegL = 0x2D << 1
     TCounterValueRegH = 0x2E << 1  # shows the 16-bit timer value
@@ -55,7 +69,9 @@ class MF522:
     TestSel1Reg = 0x31 << 1  # general test signal configuration
     TestSel2Reg = 0x32 << 1  # general test signal configuration
     TestPinEnReg = 0x33 << 1  # enables pin output driver on pins D1 to D7
-    TestPinValueReg = 0x34 << 1  # defines the values for D1 to D7 when it is used as an I/O bus
+    TestPinValueReg = (
+        0x34 << 1
+    )  # defines the values for D1 to D7 when it is used as an I/O bus
     TestBusReg = 0x35 << 1  # shows the status of the internal test bus
     AutoTestReg = 0x36 << 1  # controls the digital self test
     VersionReg = 0x37 << 1  # shows the software version
@@ -72,7 +88,8 @@ class MF522:
     PCD_Transmit = 0x04  # transmits data from the FIFO buffer
     PCD_NoCmdChange = 0x07
     PCD_Receive = 0x08  # activates the receiver circuits
-    PCD_Transceive = 0x0C  # transmits data from FIFO buffer to antenna and automatically activates the receiver after transmission
+    # transmits data from FIFO buffer to antenna and automatically activates the receiver after transmission
+    PCD_Transceive = 0x0C
     PCD_MFAuthent = 0x0E  # performs the MIFARE standard authentication as a reader
     PCD_SoftReset = 0x0F  # resets the MFRC522
 
@@ -90,23 +107,37 @@ class MF522:
 
     # The commands used by the PCD to manage communication with several PICCs (ISO 14443-3, Type A, section 6.4)
     PICC_CMD_REQA = 0x26  # REQuest command, Type A. Invites PICCs in state IDLE to go to READY and prepare for anticollision or selection
-    PICC_CMD_WUPA = 0x52  # Wake-UP command, prepare for anticollision or selection. 7 bit frame.
-    PICC_CMD_CT = 0x88  # Cascade Tag. Not really a command, but used during anti collision.
+    PICC_CMD_WUPA = (
+        0x52  # Wake-UP command, prepare for anticollision or selection. 7 bit frame.
+    )
+    PICC_CMD_CT = (
+        0x88  # Cascade Tag. Not really a command, but used during anti collision.
+    )
     PICC_CMD_SEL_CL1 = 0x93  # Anti collision/Select, Cascade Level 1
     PICC_CMD_SEL_CL2 = 0x95  # Anti collision/Select, Cascade Level 2
     PICC_CMD_SEL_CL3 = 0x97  # Anti collision/Select, Cascade Level 3
-    PICC_CMD_HLTA = 0x50  # HaLT command, Type A. Instructs an ACTIVE PICC to go to state HALT.
+    PICC_CMD_HLTA = (
+        0x50  # HaLT command, Type A. Instructs an ACTIVE PICC to go to state HALT.
+    )
     # The commands used for MIFARE Classic (from http://www.mouser.com/ds/2/302/MF1S503x-89574.pdf, Section 9)
     # Use PCD_MFAuthent to authenticate access to a sector, then use these commands to read/write/modify the blocks on the sector.
     # The read/write commands can also be used for MIFARE Ultralight.
     PICC_CMD_MF_AUTH_KEY_A = 0x60  # Perform authentication with Key A
     PICC_CMD_MF_AUTH_KEY_B = 0x61  # Perform authentication with Key B
-    PICC_CMD_MF_READ = 0x30  # Reads one 16 byte block from the authenticated sector of the PICC. Also used for MIFARE Ultralight.
-    PICC_CMD_MF_WRITE = 0xA0  # Writes one 16 byte block to the authenticated sector of the PICC. Called "COMPATIBILITY WRITE" for MIFARE Ultralight.
-    PICC_CMD_MF_DECREMENT = 0xC0  # Decrements the contents of a block and stores the result in the internal data register.
-    PICC_CMD_MF_INCREMENT = 0xC1  # Increments the contents of a block and stores the result in the internal data register.
-    PICC_CMD_MF_RESTORE = 0xC2  # Reads the contents of a block into the internal data register.
-    PICC_CMD_MF_TRANSFER = 0xB0  # Writes the contents of the internal data register to a block.
+    # Reads one 16 byte block from the authenticated sector of the PICC. Also used for MIFARE Ultralight.
+    PICC_CMD_MF_READ = 0x30
+    # Writes one 16 byte block to the authenticated sector of the PICC. Called "COMPATIBILITY WRITE" for MIFARE Ultralight.
+    PICC_CMD_MF_WRITE = 0xA0
+    # Decrements the contents of a block and stores the result in the internal data register.
+    PICC_CMD_MF_DECREMENT = 0xC0
+    # Increments the contents of a block and stores the result in the internal data register.
+    PICC_CMD_MF_INCREMENT = 0xC1
+    PICC_CMD_MF_RESTORE = (
+        0xC2  # Reads the contents of a block into the internal data register.
+    )
+    PICC_CMD_MF_TRANSFER = (
+        0xB0  # Writes the contents of the internal data register to a block.
+    )
 
     NRSTPD = 22
     MAX_LEN = 16
@@ -134,10 +165,12 @@ class MF522:
     # The PICC_CMD_MF_READ and PICC_CMD_MF_WRITE can also be used for MIFARE Ultralight.
     PICC_CMD_UL_WRITE = 0xA2  # Writes one 4 byte page to the PICC.
 
-    MF_ACK = 0xA  # The MIFARE Classic uses a 4 bit ACK/NAK. Any other value than 0xA is NAK.
+    MF_ACK = (
+        0xA  # The MIFARE Classic uses a 4 bit ACK/NAK. Any other value than 0xA is NAK.
+    )
     MF_KEY_SIZE = 6  # A Mifare Crypto1 key is 6 bytes.
 
-    def __init__(self, I, cs='CS1'):
+    def __init__(self, I, cs="CS1"):
         self.cs = cs
         self.I = I
         self.I.SPI.set_parameters(2, 1, 1, 0)
@@ -157,17 +190,18 @@ class MF522:
         self.connected = True
 
     def enableAntenna(self):
-        val = self.read(self.TxControlReg);
-        if ((val & 0x03) != 0x03):
-            self.write(self.TxControlReg, val | 0x03);
+        val = self.read(self.TxControlReg)
+        if (val & 0x03) != 0x03:
+            self.write(self.TxControlReg, val | 0x03)
 
     def reset(self):
         self.write(self.CommandReg, self.PCD_SoftReset)
         s = time.time()
-        while (self.read(self.CommandReg) & (1 << 4)):
-            print('wait')
+        while self.read(self.CommandReg) & (1 << 4):
+            print("wait")
             time.sleep(0.1)
-            if time.time() - s > .5: return False
+            if time.time() - s > 0.5:
+                return False
         return True
 
     def write(self, register, val):
@@ -198,15 +232,15 @@ class MF522:
     def getVersion(self):
         ver = self.read(self.VersionReg)
         if ver == 0x88:
-            print('Cloned version: Fudan Semiconductors')
+            print("Cloned version: Fudan Semiconductors")
         elif ver == 0x90:
-            print('version 1.0')
+            print("version 1.0")
         elif ver == 0x91:
-            print('version 1.0')
+            print("version 1.0")
         elif ver == 0x92:
-            print('version 2.0')
+            print("version 2.0")
         else:
-            print('Unknown version ', ver)
+            print("Unknown version ", ver)
         return ver
 
     def SetBitMask(self, reg, mask):
@@ -214,7 +248,7 @@ class MF522:
         self.write(reg, tmp | mask)
 
     def ClearBitMask(self, reg, mask):
-        tmp = self.read(reg);
+        tmp = self.read(reg)
         self.write(reg, tmp & (~mask))
 
     def MFRC522_ToCard(self, command, sendData):
@@ -238,7 +272,7 @@ class MF522:
         self.ClearBitMask(self.ComIrqReg, 0x80)
         self.SetBitMask(self.FIFOLevelReg, 0x80)
 
-        self.write(self.CommandReg, self.PCD_Idle);
+        self.write(self.CommandReg, self.PCD_Idle)
 
         for a in sendData:
             self.write(self.FIFODataReg, a)
@@ -279,7 +313,7 @@ class MF522:
                     i = 0
                     while i < n:
                         returnedData.append(self.read(self.FIFODataReg))
-                        i = i + 1;
+                        i = i + 1
             else:
                 status = self.MI_ERR
         return (status, returnedData, backLen)
@@ -291,10 +325,12 @@ class MF522:
 
         self.write(self.BitFramingReg, 0x07)
 
-        TagType.append(reqMode);
-        (status, returnedData, backBits) = self.MFRC522_ToCard(self.PCD_Transceive, TagType)
+        TagType.append(reqMode)
+        (status, returnedData, backBits) = self.MFRC522_ToCard(
+            self.PCD_Transceive, TagType
+        )
 
-        if ((status != self.MI_OK) | (backBits != 0x10)):
+        if (status != self.MI_OK) | (backBits != 0x10):
             status = self.MI_ERR
         return (status, backBits)
 
@@ -309,9 +345,11 @@ class MF522:
         serNum.append(self.PICC_ANTICOLL)
         serNum.append(0x20)
 
-        (status, returnedData, backBits) = self.MFRC522_ToCard(self.PCD_Transceive, serNum)
+        (status, returnedData, backBits) = self.MFRC522_ToCard(
+            self.PCD_Transceive, serNum
+        )
 
-        if (status == self.MI_OK):
+        if status == self.MI_OK:
             i = 0
             if len(returnedData) == 5:
                 while i < 4:
@@ -326,13 +364,13 @@ class MF522:
 
     def CalulateCRC(self, pIndata):
         self.ClearBitMask(self.DivIrqReg, 0x04)
-        self.SetBitMask(self.FIFOLevelReg, 0x80);
+        self.SetBitMask(self.FIFOLevelReg, 0x80)
         for a in pIndata:
             self.write(self.FIFODataReg, a)
         self.write(self.CommandReg, self.PCD_CALCCRC)
         for i in range(0xFF):
             n = self.read(self.DivIrqReg)
-            if (n & 0x04):
+            if n & 0x04:
                 break
         pOutData = []
         pOutData.append(self.read(self.CRCResultRegL))
@@ -366,13 +404,13 @@ class MF522:
         buff.append(BlockAddr)
         # Now we need to append the authKey which usually is 6 bytes of 0xFF
         i = 0
-        while (i < len(Sectorkey)):
+        while i < len(Sectorkey):
             buff.append(Sectorkey[i])
             i = i + 1
         i = 0
 
         # Next we append the first 4 bytes of the UID
-        while (i < 4):
+        while i < 4:
             buff.append(serNum[i])
             i = i + 1
 
@@ -399,7 +437,9 @@ class MF522:
         pOut = self.CalulateCRC(recvData)
         recvData.append(pOut[0])
         recvData.append(pOut[1])
-        (status, returnedData, backLen) = self.MFRC522_ToCard(self.PCD_Transceive, recvData)
+        (status, returnedData, backLen) = self.MFRC522_ToCard(
+            self.PCD_Transceive, recvData
+        )
         if not (status == self.MI_OK):
             print("Error while reading!")
         i = 0
@@ -413,10 +453,16 @@ class MF522:
         buff.append(crc[0])
         buff.append(crc[1])
         (status, returnedData, backLen) = self.MFRC522_ToCard(self.PCD_Transceive, buff)
-        if not (status == self.MI_OK) or not (backLen == 4) or not ((returnedData[0] & 0x0F) == 0x0A):
+        if (
+            not (status == self.MI_OK) or
+            not (backLen == 4) or
+            not ((returnedData[0] & 0x0F) == 0x0A)
+        ):
             status = self.MI_ERR
 
-        print(str(backLen) + " returnedData &0x0F == 0x0A " + str(returnedData[0] & 0x0F))
+        print(
+            str(backLen) + " returnedData &0x0F == 0x0A " + str(returnedData[0] & 0x0F)
+        )
         if status == self.MI_OK:
             i = 0
             buf = []
@@ -426,8 +472,14 @@ class MF522:
             crc = self.CalulateCRC(buf)
             buf.append(crc[0])
             buf.append(crc[1])
-            (status, returnedData, backLen) = self.MFRC522_ToCard(self.PCD_Transceive, buf)
-            if not (status == self.MI_OK) or not (backLen == 4) or not ((returnedData[0] & 0x0F) == 0x0A):
+            (status, returnedData, backLen) = self.MFRC522_ToCard(
+                self.PCD_Transceive, buf
+            )
+            if (
+                not (status == self.MI_OK) or
+                not (backLen == 4) or
+                not ((returnedData[0] & 0x0F) == 0x0A)
+            ):
                 print("Error while writing")
             if status == self.MI_OK:
                 print("Data written")
@@ -448,7 +500,7 @@ if __name__ == "__main__":
     from PSL import sciencelab
 
     I = sciencelab.connect()
-    A = MF522(I, 'CS1')
+    A = MF522(I, "CS1")
     ret = A.getStatus()
     print(ret, hex(ret), bin(ret))
     A.getVersion()
@@ -460,13 +512,22 @@ if __name__ == "__main__":
             print("Card detected")
             (status, uid) = A.MFRC522_Anticoll()
             if status == A.MI_OK:
-                print("Card read UID: " + str(uid[0]) + "," + str(uid[1]) + "," + str(uid[2]) + "," + str(uid[3]))
+                print(
+                    "Card read UID: " +
+                    str(uid[0]) +
+                    "," +
+                    str(uid[1]) +
+                    "," +
+                    str(uid[2]) +
+                    "," +
+                    str(uid[3])
+                )
                 key = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
                 A.MFRC522_SelectTag(uid)
                 status = A.MFRC522_Auth(A.PICC_AUTHENT1A, 8, key, uid)
                 if status == A.MI_OK:
                     print(A.MFRC522_Read(8))
-                    '''
+                    """
                     # Variable for the data to write
                     data = []
                     # Fill the data with 0xFF
@@ -484,11 +545,11 @@ if __name__ == "__main__":
                     # Check to see if it was written
                     A.MFRC522_Read(8)
                     print ("\n")
-                    '''
+                    """
                     A.MFRC522_StopCrypto1()
                 else:
                     print("Authentication error")
         else:
-            print('not detected')
+            print("not detected")
 
 # A.reset()

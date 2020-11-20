@@ -264,7 +264,7 @@ class Oscilloscope:
                 self._device.get_ack()
 
             data[i] = [
-                CP.ShortInt.unpack(data[i][s * 2 : s * 2 + 2])[0]
+                CP.ShortInt.unpack(data[i][s * 2: s * 2 + 2])[0]
                 for s in range(samples)
             ]
             data[i] = channel.scale(np.array(data[i]))

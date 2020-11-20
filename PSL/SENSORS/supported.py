@@ -23,4 +23,4 @@ supported = {
 # auto generated map of names to classes
 nameMap = {}
 for a in supported:
-    nameMap[supported[a].__name__.split('.')[-1]] = (supported[a])
+    nameMap[supported[a].__name__.split(".")[-1]] = supported[a]

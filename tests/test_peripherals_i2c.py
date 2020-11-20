@@ -90,8 +90,8 @@ def test_config_low_frequency(master, capsys):
     assert master.H.interface.method_calls == calls
     captured = capsys.readouterr()
     assert (
-        captured.out
-        == f"Frequency too low. Setting to : {1/((MAX_BRGVAL+1.0)/64e6+1.0/1e7)}\n"
+        captured.out ==
+        f"Frequency too low. Setting to : {1/((MAX_BRGVAL+1.0)/64e6+1.0/1e7)}\n"
     )
 
 

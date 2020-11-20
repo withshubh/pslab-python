@@ -69,11 +69,11 @@ def _get_wavelength(frequency: float, table_size: int = 1) -> Tuple[int, int]:
             return timegap, prescaler
 
     e = (
-        "Prescaler out of range. This should not happen."
-        + " "
-        + "Please report this bug, including steps to trigger it, to"
-        + " "
-        + "https://github.com/fossasia/pslab-python/issues."
+        "Prescaler out of range. This should not happen." +
+        " " +
+        "Please report this bug, including steps to trigger it, to" +
+        " " +
+        "https://github.com/fossasia/pslab-python/issues."
     )
     raise ValueError(e)
 
@@ -162,16 +162,16 @@ class WaveformGenerator:
         for i, (chan, freq) in enumerate(zip(channel, frequency)):
             if freq < self.LOW_FREQUENCY_WARNING:
                 w = (
-                    f"Frequencies under {self.LOW_FREQUENCY_WARNING} Hz have"
-                    + " "
-                    + "reduced amplitude due to AC coupling restrictions."
+                    f"Frequencies under {self.LOW_FREQUENCY_WARNING} Hz have" +
+                    " " +
+                    "reduced amplitude due to AC coupling restrictions."
                 )
                 logger.warning(w)
             elif freq > self.HIGH_FREQUENCY_WARNING:
                 w = (
-                    f"Frequencies above {self.HIGH_FREQUENCY_WARNING} Hz have"
-                    + " "
-                    + "reduced amplitude."
+                    f"Frequencies above {self.HIGH_FREQUENCY_WARNING} Hz have" +
+                    " " +
+                    "reduced amplitude."
                 )
                 logger.warning(w)
 
@@ -201,9 +201,9 @@ class WaveformGenerator:
         self._device.send_byte(CP.WAVEGEN)
         phase_coarse = int(table_size[1] * phase / 360)
         phase_fine = int(
-            timegap[1]
-            * (phase - phase_coarse * 360 / table_size[1])
-            / (360 / table_size[1])
+            timegap[1] *
+            (phase - phase_coarse * 360 / table_size[1]) /
+            (360 / table_size[1])
         )
         self._device.send_byte(CP.SET_BOTH_WG)
         self._device.send_int(timegap[0] - 1)
@@ -212,10 +212,10 @@ class WaveformGenerator:
         self._device.send_int(phase_fine)  # Timer delay / fine phase adjust.
         highres = [t == self.HIGHRES_TABLE_SIZE for t in table_size]
         self._device.send_byte(
-            (PRESCALERS.index(prescaler[1]) << 4)
-            | (PRESCALERS.index(prescaler[0]) << 2)
-            | (highres[1] << 1)
-            | (highres[0])
+            (PRESCALERS.index(prescaler[1]) << 4) |
+            (PRESCALERS.index(prescaler[0]) << 2) |
+            (highres[1] << 1) |
+            (highres[0])
         )
         self._device.get_ack()
 
@@ -397,9 +397,9 @@ class PWMGenerator:
         """
         if frequency > self.HIGH_FREQUENCY_LIMIT:
             e = (
-                "Frequency is greater than 10 MHz."
-                + " "
-                + "Please use map_reference_clock for 16 & 32 MHz outputs."
+                "Frequency is greater than 10 MHz." +
+                " " +
+                "Please use map_reference_clock for 16 & 32 MHz outputs."
             )
             raise ValueError(e)
         elif frequency <= 0:

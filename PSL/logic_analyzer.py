@@ -355,8 +355,8 @@ class LogicAnalyzer:
         self._device.send_byte(CP.START_ALTERNATE_ONE_CHAN_LA)
         self._device.send_int(CP.MAX_SAMPLES // 4)
         self._device.send_byte(
-            (self._channels[self._channel_one_map].number << 4)
-            | self._channels[self._channel_one_map]._logic_mode
+            (self._channels[self._channel_one_map].number << 4) |
+            self._channels[self._channel_one_map]._logic_mode
         )
         self._device.send_byte(
             (self._channels[self._channel_one_map].number << 4) | self._trigger_mode
@@ -372,12 +372,12 @@ class LogicAnalyzer:
         self._device.send_int(CP.MAX_SAMPLES // 4)
         self._device.send_byte((self._trigger_channel.number << 4) | self._trigger_mode)
         self._device.send_byte(
-            self._channels[self._channel_one_map]._logic_mode
-            | (self._channels[self._channel_two_map]._logic_mode << 4)
+            self._channels[self._channel_one_map]._logic_mode |
+            (self._channels[self._channel_two_map]._logic_mode << 4)
         )
         self._device.send_byte(
-            self._channels[self._channel_one_map].number
-            | (self._channels[self._channel_two_map].number << 4)
+            self._channels[self._channel_one_map].number |
+            (self._channels[self._channel_two_map].number << 4)
         )
         self._device.get_ack()
 
@@ -400,10 +400,10 @@ class LogicAnalyzer:
         self._device.send_byte(CP.START_FOUR_CHAN_LA)
         self._device.send_int(CP.MAX_SAMPLES // 4)
         self._device.send_int(
-            self._channels["LA1"]._logic_mode
-            | (self._channels["LA2"]._logic_mode << 4)
-            | (self._channels["LA3"]._logic_mode << 8)
-            | (self._channels["LA4"]._logic_mode << 12)
+            self._channels["LA1"]._logic_mode |
+            (self._channels["LA2"]._logic_mode << 4) |
+            (self._channels["LA3"]._logic_mode << 8) |
+            (self._channels["LA4"]._logic_mode << 12)
         )
         self._device.send_byte(self._prescaler)
 
@@ -471,7 +471,7 @@ class LogicAnalyzer:
         self._device.get_ack()
 
         raw_timestamps = [
-            CP.Integer.unpack(raw[a * 4 : a * 4 + 4])[0]
+            CP.Integer.unpack(raw[a * 4: a * 4 + 4])[0]
             for a in range(CP.MAX_SAMPLES // 4)
         ]
         raw_timestamps = np.array(raw_timestamps)
@@ -491,7 +491,7 @@ class LogicAnalyzer:
         self._device.get_ack()
 
         raw_timestamps = [
-            CP.ShortInt.unpack(raw[a * 2 : a * 2 + 2])[0]
+            CP.ShortInt.unpack(raw[a * 2: a * 2 + 2])[0]
             for a in range(CP.MAX_SAMPLES // 4)
         ]
         raw_timestamps = np.array(raw_timestamps)
@@ -502,7 +502,7 @@ class LogicAnalyzer:
 
         for i, diff in enumerate(np.diff(raw_timestamps)):
             if diff <= 0:  # Counter has rolled over.
-                raw_timestamps[i + 1 :] += 2 ** 16 - 1
+                raw_timestamps[i + 1:] += 2 ** 16 - 1
 
         return raw_timestamps
 

@@ -94,8 +94,8 @@ class Handler:
                     break
             else:
                 e = (
-                    "A udev rule must be installed to access the PSLab. "
-                    + "Please copy 99-pslab.rules to /etc/udev/rules.d/."
+                    "A udev rule must be installed to access the PSLab. " +
+                    "Please copy 99-pslab.rules to /etc/udev/rules.d/."
                 )
                 raise OSError(e)
 
