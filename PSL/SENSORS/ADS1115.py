@@ -188,8 +188,10 @@ class ADS1115:
             self.REG_CONFIG_CQUE_NONE |
             self.REG_CONFIG_CLAT_NONLAT |
             self.REG_CONFIG_CPOL_ACTVLOW |
-            self.REG_CONFIG_CMODE_TRAD |  # Disable the comparator (default val)
-            self.sdr_selection[self.rate] |  # Non-latching (default val)
+            self.REG_CONFIG_CMODE_TRAD |
+            self.sdr_selection[self.rate] |
+            # Disable the comparator (default val)
+            # Non-latching (default val)
             # Alert/Rdy active low   (default val)
             # Traditional comparator (default val)  # 1600 samples per second (default)
             self.REG_CONFIG_MODE_SINGLE
@@ -220,8 +222,10 @@ class ADS1115:
             self.REG_CONFIG_CQUE_NONE |
             self.REG_CONFIG_CLAT_NONLAT |
             self.REG_CONFIG_CPOL_ACTVLOW |
-            self.REG_CONFIG_CMODE_TRAD |  # Disable the comparator (default val)
-            self.sdr_selection[self.rate] |  # Non-latching (default val)
+            self.REG_CONFIG_CMODE_TRAD |
+            self.sdr_selection[self.rate] |
+            # Disable the comparator (default val)
+            # Non-latching (default val)
             # Alert/Rdy active low   (default val)
             # Traditional comparator (default val)  # samples per second
             self.REG_CONFIG_MODE_SINGLE
